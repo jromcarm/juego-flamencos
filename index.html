@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Dónde están los flamencos?</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff7f3;--fg:#2b2230;--card:#fff;--ln:#f0d6dc;--pk:#e8579a;--mu:#7a6b78;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1722;--fg:#f6eef3;--card:#2a2230;--ln:#3d3246;--mu:#b9a9b6}}
+:root[data-theme="dark"]{--bg:#1d1722;--fg:#f6eef3;--card:#2a2230;--ln:#3d3246;--mu:#b9a9b6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:16px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+main{max-width:520px;margin:auto;padding:12px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}h1{font-size:1.2rem;margin:4px 0}h1 small{color:var(--pk);font-size:1rem}#ic{display:flex;gap:6px;flex:none}.ib{width:38px;height:38px;padding:0;font-size:1.1rem;border-radius:50%;line-height:1}
+nav{display:flex;gap:8px;margin-bottom:10px}
+button{font:inherit;border:2px solid var(--pk);background:var(--card);color:var(--fg);border-radius:12px;padding:8px 14px}
+button.on,button.go{background:var(--pk);color:#fff}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-top:10px}
+#sv{width:100%;max-width:100%;background:var(--card);border:1px solid var(--ln);border-radius:14px;margin-top:8px;touch-action:manipulation}
+#gr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fl{width:100%;max-width:130px;display:block;margin:auto}.lk{filter:brightness(0);opacity:.2}
+.b{font-size:.75rem;border-radius:8px;padding:1px 8px;background:var(--ln);color:var(--fg)}
+.mu{color:var(--mu);font-size:.9rem}
+#md{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+#md[hidden],section[hidden]{display:none}
+#mb{background:var(--card);border-radius:18px;padding:18px;max-width:440px;max-height:88vh;overflow:auto}
+.sc{font-size:2.4rem;text-align:center;padding:18px 6px;border-radius:14px;background:linear-gradient(#ffd9c7,#ffc2d6);margin-bottom:8px;animation:fy 2s ease-in-out infinite alternate}@keyframes fy{to{transform:translateY(-7px)}}@keyframes w{50%{transform:rotate(6deg)}}.fl.w{animation:w 1s infinite}
+</style></head><body><main>
+<header><h1>🦩 ¿Dónde están los flamencos? <small id="pg"></small></h1><div id="ic"><button id="gps" class="ib" title="Activar GPS" aria-label="Activar GPS">📍</button><button id="tl" class="ib" title="Herramientas" aria-label="Herramientas">⚙️</button></div></header>
+<nav><button data-t="map" class="on">Mapa</button><button data-t="alb">Álbum</button><button data-t="cu">Pistas</button></nav>
+<section id="map">
+<div id="st" class="mu"></div>
+<input type="checkbox" id="tm" hidden>
+<div id="nr"></div>
+<svg id="sv" viewBox="0 0 340 340"></svg>
+<div id="in" class="card mu">Tu aventura empieza en el centro de interpretación (pin 1): ¡Blanca te espera! Toca un número para ver la pista.</div>
+<p class="mu">Coordenadas provisionales. Camina despacio, mira a los lados y no cruces sin mirar.</p>
+
+</section>
+<section id="alb" hidden><div id="gr"></div></section>
+<section id="cu" hidden></section>
+</main>
+<div id="md" hidden><div id="mb"></div></div>
+<script>
+const R=30,OF=[[0,0],[40,-30],[-35,45],[30,40],[-40,-25],[25,-45]];
+const F=[
+{n:"Blanca",p:"Centro de interpretación",lat:37.0452,lon:-4.8715,r:"Común",c:"#f4a6c0",a:"🔭",k:"Ve al centro de interpretación: ¡Blanca te espera con sus prismáticos!",h:"Es ornitóloga: se pasa el día mirando aves con sus prismáticos. Pero hoy busca a sus cinco flamenquitos, que se han disfrazado de cosas del pueblo.",d:"Los flamencos que crían en Fuente de Piedra se dispersan luego por el Mediterráneo y el noroeste de África, y visitan a menudo las lagunas de Campillos."},
+{n:"Paseante",p:"Plaza de España",lat:37.0467,lon:-4.8668,r:"Común",c:"#f06fa8",a:"🕶️",k:"Voy dando vueltas con mucho salero, saludo a la gente: ¡soy el paseandero!<br>Búscame en la plaza, junto a la iglesia, paseando tranquilo y sin urgencia.",h:"Da vueltas y vueltas a la plaza saludando a todo el mundo. Dice que es para hacer la digestión.",d:"El centro de Campillos es pequeño y se recorre a pie: ¡un pueblo perfecto para pasear!"},
+{n:"Jamonero",p:"Parque José María Hinojosa",lat:37.0480,lon:-4.8650,r:"Raro",c:"#d9467f",a:"🍖",k:"Sigo el olor del mejor jamón, mi tripa canta una canción.<br>Estoy en un parque con nombre de poeta: ¡búscame ya, que tengo la tripa repleta!",h:"Siguió el olor del jamón hasta el parque y ahora no quiere irse. Jura que solo está «probando».",d:"En este parque se celebra la Feria del Jamón, una cita gastronómica del pueblo."},
+{n:"Poeta",p:"Calle Real, frente a la casa de Hinojosa",lat:37.0472,lon:-4.8661,r:"Raro",c:"#b4478f",a:"🪶",k:"Con pluma y con tinta escribo al revés, me escondo en la calle con nombre de rey.<br>Frente a la casa de un poeta que nació aquí, ¡ven a leer mis versos, que te espero a ti!",h:"Escribe versos que no riman con nada, pero suenan a sueño. Tiene la pluma siempre lista.",d:"José María Hinojosa nació en Campillos en 1904 y fue poeta de la Generación del 27."},
+{n:"Reposo",p:"Iglesia de Santa María del Reposo",lat:37.0466,lon:-4.8672,r:"Poco común",c:"#ff8fb1",a:"💤",k:"Duermo a pata coja, ¡silencio, por favor!<br>La iglesia y yo compartimos nombre: ¡búscame con amor!",h:"Duerme a pata coja, muy quieto, porque la iglesia se llama «del Reposo» y se lo ha tomado al pie de la letra.",d:"La iglesia se construyó en 1506 y se reformó en el siglo XVIII."},
+{n:"Pregonero",p:"Ayuntamiento",lat:37.0464,lon:-4.8665,r:"Poco común",c:"#e0567a",a:"📣",k:"¡Atención, atención, traigo una gran noticia: es la hora del bocadillo, qué delicia!<br>Donde el pueblo se reúne a decidir, ven corriendo a oírme y a reír.",h:"Anuncia a gritos noticias muy serias, como que ya es la hora del bocadillo.",d:"Antes de que hubiera móviles, los pregoneros daban las noticias en voz alta por las calles."}
+];
+let S={f:{},seen:0};try{S=JSON.parse(localStorage.getItem("fc"))||S}catch(e){}
+S.h=S.h||{};const sv=()=>{try{localStorage.setItem("fc",JSON.stringify(S))}catch(e){}};
+const $=i=>document.getElementById(i);let pos=null,sel=null;
+const dist=(a,b)=>{const t=Math.PI/180;return Math.hypot((b.lon-a.lon)*t*Math.cos((a.lat+b.lat)/2*t),(b.lat-a.lat)*t)*6371000};
+const la0=F.reduce((s,f)=>s+f.lat,0)/F.length,lo0=F.reduce((s,f)=>s+f.lon,0)/F.length,cs=Math.cos(la0*Math.PI/180);
+const mx=f=>(f.lon-lo0)*cs*111320,my=f=>-(f.lat-la0)*110540;
+const xs=F.map(mx),ys=F.map(my),sc=280/Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),1);
+const cx=(Math.max(...xs)+Math.min(...xs))/2,cy=(Math.max(...ys)+Math.min(...ys))/2;
+const X=f=>170+(mx(f)-cx)*sc,Y=f=>170+(my(f)-cy)*sc;
+const fl=(c,a,x)=>`<svg viewBox="0 0 120 140" class="fl ${x||""}"><g fill="none" stroke-linecap="round"><path d="M78 80C100 58 58 50 80 28" stroke="${c}" stroke-width="9"/><path d="M55 104V134M68 104L72 128" stroke="#c0396f" stroke-width="3"/></g><ellipse cx="58" cy="88" rx="30" ry="20" fill="${c}"/><circle cx="82" cy="26" r="9" fill="${c}"/><path d="M88 23q16 3 12 14l-11-7z" fill="#2b2230"/><circle cx="84" cy="24" r="2" fill="#fff"/><text x="62" y="18" font-size="24">${a}</text></svg>`;
+const ficha=i=>{const f=F[i];return `${fl(f.c,f.a,"w")}<h2>${f.n} <span class="b">${f.r}</span></h2><p class="mu">📍 ${f.p}</p><p>${f.h}</p><p><b>¿Sabías que…?</b> ${f.d}</p>`};
+function modal(h,btn,fn){$("mb").innerHTML=h+`<p><button class="go" id="mc">${btn}</button></p>`;$("md").hidden=false;$("mc").onclick=()=>{$("md").hidden=true;fn&&fn()}}
+const n=()=>Object.keys(S.f).length;
+function draw(){
+let s=`<rect width="340" height="340" fill="none"/>`;
+F.forEach((f,i)=>{const ok=S.f[i],lk=0;if(i>0&&!ok){if(S.h[i]){const o=OF[i],qx=X(f)+o[0]*sc,qy=Y(f)+o[1]*sc;s+=`<circle cx="${qx}" cy="${qy}" r="${100*sc}" fill="#e8579a22" stroke="#e8579a" stroke-dasharray="6 5"/><text x="${qx}" y="${qy+7}" text-anchor="middle" font-size="22">❓</text>`}return}s+=`<g data-i="${i}" style="cursor:pointer"><circle cx="${X(f)}" cy="${Y(f)}" r="17" fill="${ok?f.c:"#bbb"}" stroke="#fff" stroke-width="2"/><text x="${X(f)}" y="${Y(f)+5}" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">${ok?"✓":lk?"🔒":i+1}</text></g>`});
+if(pos){const px=Math.min(330,Math.max(10,170+(mx(pos)-cx)*sc)),py=Math.min(330,Math.max(10,170+(my(pos)-cy)*sc));s+=`<circle cx="${px}" cy="${py}" r="8" fill="#2f7bff" stroke="#fff" stroke-width="3"/>`}
+$("sv").innerHTML=s;$("pg").textContent=n()+"/"+F.length;$("gps").classList.toggle("go",!!pos);
+$("st").textContent=pos?"Posición: "+pos.lat.toFixed(5)+", "+pos.lon.toFixed(5)+(S.f[0]?"":" · estás a "+Math.round(dist(pos,F[0]))+" m de Blanca (el botón «Buscar» sale a menos de "+R+" m)"):"GPS apagado.";if($("tm").checked)$("st").textContent+=" · MODO PRUEBA: toca el mapa para moverte";
+let near=-1,best=1e9;if(pos)F.forEach((f,i)=>{const d=dist(pos,f);if(!S.f[i]&&(i==0||S.f[0])&&d<=R&&d<best){best=d;near=i}});
+$("nr").innerHTML=near>=0?`<div class="card">¡Hay un flamenco cerca! <button class="go" id="bs">Buscar</button></div>`:"";
+if(near>=0)$("bs").onclick=()=>enc(near);
+if(sel!==null){const f=F[sel],d=pos?" · a "+Math.round(dist(pos,f))+" m":"";$("in").innerHTML=S.f[sel]?ficha(sel):(sel>0&&!S.f[0])?"🔒 Primero ve al centro de interpretación y habla con Blanca.":`<b>Flamenco ${sel+1}</b>${d}<br>${f.k}`}
+if(S.f[0]&&(sel===null||sel===0))$("in").innerHTML="📖 Mira la pestaña <b>Pistas</b>: Blanca te ha dejado una rima de cada flamenquito. ¡Pasea por el pueblo y aparecerán cuando estés cerca!";if(n()==F.length)$("in").innerHTML="🎉 <b>¡Familia completa!</b> Blanca ya tiene a todos sus flamenquitos y la bandada puede seguir su peregrinación hacia las lagunas. ¡Gracias, Guardián de la Bandada!";
+alb()}
+function cu(){$("cu").innerHTML=!S.f[0]?'<div class="card">🔒 Primero conoce a Blanca en el centro de interpretación.</div>':F.slice(1).map((f,j)=>{const i=j+1,ok=S.f[i];return `<div class="card"><b>${ok?"✓ "+f.n:"Rima "+i}</b><br>${ok?f.p:f.k}${ok?"":`<br><button data-h="${i}">${S.h[i]?"Zona marcada en el mapa":"Pista extra"}</button>`}</div>`}).join("");$("cu").onclick=e=>{const b=e.target.closest("[data-h]");if(b){S.h[b.dataset.h]=1;sv();draw()}}}
+function alb(){cu();$("gr").innerHTML=F.map((f,i)=>{const ok=S.f[i];return `<div class="card" data-a="${i}">${ok?fl(f.c,f.a):fl("#000","","lk")}<b>${ok?f.n:"???"}</b><br><span class="mu">${ok?f.r:f.p}</span></div>`}).join("")}
+function enc(i){const f=F[i];modal(i==0?`${fl(f.c,f.a,"w")}<h2>¡Ay, por fin alguien!</h2><p>Soy <b>Blanca</b>, la flamenca ornitóloga. Íbamos de camino a África, paramos a descansar en las lagunas y, mientras contaba cabezas… ¡me faltan cinco flamenquitos!</p><p>Se han disfrazado de cosas del pueblo y, con tanto mirar pájaros, ¡ya no distingo a un flamenquito de un señor con sombrero! Y yo no me puedo ir: tengo que esperar al resto de la bandada.</p><p>¿Me ayudas a encontrarlos? Te dejo mi <b>cuaderno de pistas</b> con una rima de cada uno. ¡Pasea por el pueblo y, cuando estés cerca, aparecerán! Da igual el orden.</p>`:`${fl(f.c,f.a,"w")}<h2>¡Un flamenco!</h2><p>Se ha escondido aquí… ¿quién será?</p>`,i?"Descubrir":"¡Cuenta conmigo!",()=>{S.f[i]=Date.now();sv();sel=i;draw();modal(ficha(i),"¡Al álbum!")})}
+$("sv").onclick=e=>{const g=e.target.closest("[data-i]");if(g&&!$("tm").checked){sel=+g.dataset.i;draw();return}
+if($("tm").checked){const r=$("sv").getBoundingClientRect(),x=(e.clientX-r.left)/r.width*340,y=(e.clientY-r.top)/r.height*340;
+pos={lon:lo0+((x-170)/sc+cx)/(cs*111320),lat:la0-((y-170)/sc+cy)/110540};draw()}};
+$("gr").onclick=e=>{const c=e.target.closest("[data-a]");if(c&&S.f[c.dataset.a])modal(ficha(+c.dataset.a),"Cerrar")};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x==b));$("map").hidden=b.dataset.t!="map";$("alb").hidden=b.dataset.t!="alb";$("cu").hidden=b.dataset.t!="cu"});
+$("gps").onclick=()=>{if(!navigator.geolocation){$("st").textContent="Este navegador no tiene GPS. Usa el modo prueba.";return}
+navigator.geolocation.watchPosition(p=>{if(!$("tm").checked){pos={lat:p.coords.latitude,lon:p.coords.longitude};draw()}},()=>{$("st").textContent="No se pudo usar el GPS. Revisa el permiso o usa el modo prueba."},{enableHighAccuracy:true,maximumAge:5000})};
+draw();
+const SL=[["🦩🦩🦩🦩 ➜ 🌍","Cada año, una gran bandada de flamencos emprende un viaje larguísimo rumbo a <b>África</b>."],["🏞️ 🦩🦩🦩 🌅","Por el camino, hacen una parada en <b>Campillos</b> para descansar en sus magníficas lagunas."],["🦩💨 🏘️ 🦩❓","Pero este año, ¡unos flamenquitos se han escapado por el pueblo! Una flamenca muy preocupada te espera en el <b>centro de interpretación</b>. Se llama <b>Blanca</b>."]];
+function sl(k){modal(`<div class="sc">${SL[k][0]}</div><p>${SL[k][1]}</p><p class="mu">${"●".repeat(k+1)}${"○".repeat(2-k)}${k==2?"<br>Ve siempre con un adulto, sin prisas. ¡Los flamencos no corren!":""}</p>`,k<2?"Siguiente":"¡Empezar!",()=>{if(k<2)sl(k+1);else{S.seen=1;sv()}})}
+function tools(){const t=$("tm").checked;$("mb").innerHTML=`<h2>⚙️ Herramientas</h2><p><button id="t1">Ver la historia otra vez</button></p><p><button id="t2">Modo prueba: ${t?"activado":"desactivado"}</button></p><p class="mu">En modo prueba tocas el mapa para moverte, útil para probar sin salir de casa.</p><p><button id="t3">Reiniciar partida</button></p><p><button class="go" id="t0">Cerrar</button></p>`;$("md").hidden=false;
+$("t0").onclick=()=>{$("md").hidden=true};
+$("t1").onclick=()=>{$("md").hidden=true;sl(0)};
+$("t2").onclick=()=>{$("tm").checked=!$("tm").checked;draw();tools()};
+$("t3").onclick=()=>{$("mb").innerHTML=`<h2>⚠️ ¿Reiniciar partida?</h2><p>Perderás todos los flamencos encontrados y las pistas usadas. No se puede deshacer.</p><p><button id="y">Sí, borrar todo</button> <button class="go" id="n">No, volver</button></p>`;$("n").onclick=tools;$("y").onclick=()=>{S={f:{},seen:0,h:{}};sv();sel=null;$("md").hidden=true;draw();sl(0)}}}
+$("tl").onclick=tools;
+if(!S.seen)sl(0);
+</script></body></html>
